@@ -1579,47 +1579,41 @@
                     ctx.fill();
 
                     ctx.shadowColor = '#00ffcc';
-                    ctx.shadowBlur = 20;
+                    ctx.shadowBlur = 10;
 
-                    ctx.beginPath();
-                    ctx.moveTo(player.size * 1.2, 0);
-                    ctx.lineTo(player.size * 0.3, -player.size * 0.25);
-                    ctx.lineTo(-player.size * 0.2, -player.size * 0.3);
-                    ctx.lineTo(-player.size * 0.6, -player.size * 0.9);
-                    ctx.lineTo(-player.size * 0.8, -player.size * 0.85);
-                    ctx.lineTo(-player.size * 0.5, -player.size * 0.3);
-                    ctx.lineTo(-player.size, -player.size * 0.5);
-                    ctx.lineTo(-player.size * 1.1, -player.size * 0.45);
-                    ctx.lineTo(-player.size * 0.9, -player.size * 0.15);
-                    ctx.lineTo(-player.size * 0.9, 0);
-                    ctx.lineTo(-player.size * 0.9, player.size * 0.15);
-                    ctx.lineTo(-player.size * 1.1, player.size * 0.45);
-                    ctx.lineTo(-player.size, player.size * 0.5);
-                    ctx.lineTo(-player.size * 0.5, player.size * 0.3);
-                    ctx.lineTo(-player.size * 0.8, player.size * 0.85);
-                    ctx.lineTo(-player.size * 0.6, player.size * 0.9);
-                    ctx.lineTo(-player.size * 0.2, player.size * 0.3);
-                    ctx.lineTo(player.size * 0.3, player.size * 0.25);
-                    ctx.closePath();
+                    const shipPixels = [
+                        "   3333         ",
+                        "  311113        ",
+                        " 311111133      ",
+                        "311122221133    ",
+                        "3112222222113   ",
+                        "31111111111113  ",
+                        "311111111111113 ",
+                        "311111111111113 ",
+                        "31111111111113  ",
+                        "3112222222113   ",
+                        "311122221133    ",
+                        " 311111133      ",
+                        "  311113        ",
+                        "   3333         "
+                    ];
 
-                    const bodyGrad = ctx.createLinearGradient(-player.size, 0, player.size, 0);
-                    bodyGrad.addColorStop(0, '#004466');
-                    bodyGrad.addColorStop(0.4, '#007799');
-                    bodyGrad.addColorStop(0.7, '#00aacc');
-                    bodyGrad.addColorStop(1, '#00ffcc');
-                    ctx.fillStyle = bodyGrad;
-                    ctx.fill();
-                    ctx.strokeStyle = '#00ffcc';
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
+                    const pSize = player.size / 7.5; // pixel block size
+                    const offsetX = -pSize * 7.5;
+                    const offsetY = -pSize * 7;
 
-                    ctx.beginPath();
-                    ctx.ellipse(player.size * 0.3, 0, player.size * 0.25, player.size * 0.12, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-                    ctx.fill();
-                    ctx.strokeStyle = 'rgba(0, 255, 204, 0.8)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+                    for (let r = 0; r < shipPixels.length; r++) {
+                        for (let c = 0; c < shipPixels[r].length; c++) {
+                            const char = shipPixels[r][c];
+                            if (char !== ' ') {
+                                if (char === '1') ctx.fillStyle = '#00ffcc';
+                                else if (char === '2') ctx.fillStyle = '#ccffff';
+                                else if (char === '3') ctx.fillStyle = '#004466';
+                                // Draw pixel with slight overlap to prevent gaps
+                                ctx.fillRect(offsetX + c * pSize, offsetY + r * pSize, pSize + 0.5, pSize + 0.5);
+                            }
+                        }
+                    }
 
                     ctx.shadowBlur = 0;
                     ctx.restore();
