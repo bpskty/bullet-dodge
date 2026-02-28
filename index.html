@@ -819,6 +819,67 @@
             let serverOnline = false;
             let playerCountry = '';
 
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || isTouchDevice;
+
+            // ─── i18n ───
+            const LANG = {
+                ko: {
+                    subtitle: '총알 피하기',
+                    instructions: '마우스 또는 방향키로 비행기를 조종하세요<br>사방에서 날아오는 총알을 피하세요<br>시간이 지날수록 총알이 점점 많아집니다',
+                    instructionsMobile: '화면을 드래그하여 비행기를 조종하세요<br>사방에서 날아오는 총알을 피하세요<br>시간이 지날수록 총알이 점점 많아집니다',
+                    mobileHint: '화면을 터치하여 조종',
+                    placeholder: '이름 입력',
+                    loading: '불러오는 중...',
+                    lbEmpty: '아직 기록이 없습니다. 첫 번째 기록을 세워보세요!',
+                    lbError: '서버에 연결할 수 없습니다',
+                    lbLoadError: '리더보드를 불러올 수 없습니다',
+                    survivalTime: '생존 시간',
+                    submitting: '기록 등록 중...',
+                    submitted: '기록이 등록되었습니다!',
+                    submitFail: '기록 등록 실패',
+                    connectFail: '서버 연결 실패',
+                },
+                en: {
+                    subtitle: 'Dodge the Bullets',
+                    instructions: 'Use mouse or arrow keys to control the plane<br>Dodge bullets coming from all directions<br>More bullets spawn as time goes on',
+                    instructionsMobile: 'Drag the screen to control the plane<br>Dodge bullets coming from all directions<br>More bullets spawn as time goes on',
+                    mobileHint: 'Touch to control',
+                    placeholder: 'Enter name',
+                    loading: 'Loading...',
+                    lbEmpty: 'No records yet. Be the first!',
+                    lbError: 'Cannot connect to server',
+                    lbLoadError: 'Failed to load leaderboard',
+                    survivalTime: 'SURVIVAL TIME',
+                    submitting: 'Submitting...',
+                    submitted: 'Score registered!',
+                    submitFail: 'Failed to submit',
+                    connectFail: 'Connection failed',
+                }
+            };
+            let lang = LANG.ko; // default Korean
+
+            function applyLanguage() {
+                const isKR = playerCountry === 'KR';
+                lang = isKR ? LANG.ko : LANG.en;
+
+                // Update HTML text
+                document.querySelector('#start-screen .subtitle').textContent = lang.subtitle;
+                document.getElementById('instructions-text').innerHTML = isMobile ? lang.instructionsMobile : lang.instructions;
+                document.getElementById('mobile-hint').textContent = lang.mobileHint;
+                document.getElementById('player-name').placeholder = lang.placeholder;
+                document.querySelector('#start-screen .lb-loading, #start-lb-list')
+                    && (document.getElementById('start-lb-list').innerHTML = `<div class="lb-loading">${lang.loading}</div>`);
+                document.querySelector('.final-label').textContent = lang.survivalTime;
+
+                // Update page title & meta
+                if (!isKR) {
+                    document.title = 'Bullet Dodge';
+                    const meta = document.querySelector('meta[name="description"]');
+                    if (meta) meta.content = 'Dodge bullets from all directions in this airplane game';
+                }
+            }
+
             // Country code to flag emoji
             function countryToFlag(code) {
                 if (!code || code.length !== 2) return '';
@@ -829,7 +890,7 @@
                 );
             }
 
-            // Detect country on load
+            // Detect country on load & apply language
             async function detectCountry() {
                 try {
                     const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
@@ -838,6 +899,7 @@
                 } catch {
                     playerCountry = '';
                 }
+                applyLanguage();
             }
             detectCountry();
 
@@ -929,11 +991,11 @@
 
             async function fetchLeaderboard(targetListEl) {
                 if (!serverOnline) {
-                    targetListEl.innerHTML = '<div class="lb-error">서버에 연결할 수 없습니다</div>';
+                    targetListEl.innerHTML = `<div class="lb-error">${lang.lbError}</div>`;
                     return [];
                 }
 
-                targetListEl.innerHTML = '<div class="lb-loading">불러오는 중...</div>';
+                targetListEl.innerHTML = `<div class="lb-loading">${lang.loading}</div>`;
 
                 try {
                     const res = await fetch(
@@ -955,14 +1017,14 @@
                     renderLeaderboard(targetListEl, scores);
                     return scores;
                 } catch (err) {
-                    targetListEl.innerHTML = '<div class="lb-error">리더보드를 불러올 수 없습니다</div>';
+                    targetListEl.innerHTML = `<div class="lb-error">${lang.lbLoadError}</div>`;
                     return [];
                 }
             }
 
             function renderLeaderboard(container, scores) {
                 if (scores.length === 0) {
-                    container.innerHTML = '<div class="lb-empty">아직 기록이 없습니다. 첫 번째 기록을 세워보세요!</div>';
+                    container.innerHTML = `<div class="lb-empty">${lang.lbEmpty}</div>`;
                     return;
                 }
 
@@ -997,7 +1059,7 @@
             async function submitScore(name, time) {
                 if (!serverOnline || !name) return null;
 
-                submitStatusEl.textContent = '기록 등록 중...';
+                submitStatusEl.textContent = lang.submitting;
 
                 try {
                     const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
@@ -1010,7 +1072,7 @@
                         const entries = await res.json();
                         const entry = entries[0];
                         lastSubmittedId = entry.id;
-                        submitStatusEl.textContent = '기록이 등록되었습니다!';
+                        submitStatusEl.textContent = lang.submitted;
 
                         // Calculate rank by counting scores higher than this one
                         const countRes = await fetch(
@@ -1025,11 +1087,11 @@
                         return { success: true, rank, entry };
                     } else {
                         const err = await res.json();
-                        submitStatusEl.textContent = err.message || '기록 등록 실패';
+                        submitStatusEl.textContent = err.message || lang.submitFail;
                         return null;
                     }
                 } catch (err) {
-                    submitStatusEl.textContent = '서버 연결 실패';
+                    submitStatusEl.textContent = lang.connectFail;
                     return null;
                 }
             }
@@ -1083,8 +1145,6 @@
             });
 
             // ─── Mobile Detection & Touch Controls ───
-            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-            const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || isTouchDevice;
 
             const mobileHint = document.getElementById('mobile-hint');
             const instructionsText = document.getElementById('instructions-text');
@@ -1098,10 +1158,6 @@
 
             if (isMobile) {
                 document.body.style.cursor = 'auto';
-                instructionsText.innerHTML =
-                    '화면을 드래그하여 비행기를 조종하세요<br>' +
-                    '사방에서 날아오는 총알을 피하세요<br>' +
-                    '시간이 지날수록 총알이 점점 많아집니다';
                 mobileHint.style.display = 'block';
             }
 
