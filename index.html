@@ -817,6 +817,29 @@
                 'Prefer': 'return=representation',
             };
             let serverOnline = false;
+            let playerCountry = '';
+
+            // Country code to flag emoji
+            function countryToFlag(code) {
+                if (!code || code.length !== 2) return '';
+                const offset = 0x1F1E6 - 65;
+                return String.fromCodePoint(
+                    code.charCodeAt(0) + offset,
+                    code.charCodeAt(1) + offset
+                );
+            }
+
+            // Detect country on load
+            async function detectCountry() {
+                try {
+                    const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
+                    const data = await res.json();
+                    playerCountry = (data.country_code || '').toUpperCase();
+                } catch {
+                    playerCountry = '';
+                }
+            }
+            detectCountry();
 
             // ─── Canvas Setup ───
             const canvas = document.getElementById('gameCanvas');
@@ -914,7 +937,7 @@
 
                 try {
                     const res = await fetch(
-                        `${SUPABASE_URL}/rest/v1/scores?select=id,name,time,created_at&order=time.desc&limit=20`,
+                        `${SUPABASE_URL}/rest/v1/scores?select=id,name,time,country,created_at&order=time.desc&limit=20`,
                         { headers: API_HEADERS }
                     );
                     const scores = await res.json();
@@ -955,7 +978,7 @@
                     <div class="lb-row ${isMe ? 'is-me' : ''}">
                         <div class="lb-rank">${s.rank || i + 1}</div>
                         <div class="lb-medal">${medal}</div>
-                        <div class="lb-name">${escapeHtml(s.name)}</div>
+                        <div class="lb-name">${s.country ? countryToFlag(s.country) + ' ' : ''}${escapeHtml(s.name)}</div>
                         <div class="lb-time">${s.time.toFixed(2)}s</div>
                         <div class="lb-date">${s.date || ''}</div>
                     </div>
@@ -980,7 +1003,7 @@
                     const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
                         method: 'POST',
                         headers: API_HEADERS,
-                        body: JSON.stringify({ name, time: parseFloat(time.toFixed(2)) }),
+                        body: JSON.stringify({ name, time: parseFloat(time.toFixed(2)), country: playerCountry }),
                     });
 
                     if (res.ok) {
