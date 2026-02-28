@@ -1581,34 +1581,36 @@
                     ctx.shadowColor = '#00ffcc';
                     ctx.shadowBlur = 10;
 
+                    // Rotate specifically for this UP-facing sprite array
+                    ctx.rotate(Math.PI / 2);
+
                     const shipPixels = [
-                        "   3333         ",
-                        "  311113        ",
-                        " 311111133      ",
-                        "311122221133    ",
-                        "3112222222113   ",
-                        "31111111111113  ",
-                        "311111111111113 ",
-                        "311111111111113 ",
-                        "31111111111113  ",
-                        "3112222222113   ",
-                        "311122221133    ",
-                        " 311111133      ",
-                        "  311113        ",
-                        "   3333         "
+                        "       1       ",
+                        "       1       ",
+                        "      111      ",
+                        "      111      ",
+                        "  2   111   2  ",
+                        "  2   111   2  ",
+                        " 22  31113  22 ",
+                        " 2111112111112 ",
+                        " 2111122211112 ",
+                        " 211112 211112 ",
+                        " 21112   21112 ",
+                        "  1112   2111  ",
+                        "   1       1   "
                     ];
 
                     const pSize = player.size / 7.5; // pixel block size
                     const offsetX = -pSize * 7.5;
-                    const offsetY = -pSize * 7;
+                    const offsetY = -pSize * 6.5;
 
                     for (let r = 0; r < shipPixels.length; r++) {
                         for (let c = 0; c < shipPixels[r].length; c++) {
                             const char = shipPixels[r][c];
                             if (char !== ' ') {
-                                if (char === '1') ctx.fillStyle = '#00ffcc';
-                                else if (char === '2') ctx.fillStyle = '#ccffff';
-                                else if (char === '3') ctx.fillStyle = '#004466';
+                                if (char === '1') ctx.fillStyle = '#ffffff';
+                                else if (char === '2') ctx.fillStyle = '#ff2244';
+                                else if (char === '3') ctx.fillStyle = '#00bbff';
                                 // Draw pixel with slight overlap to prevent gaps
                                 ctx.fillRect(offsetX + c * pSize, offsetY + r * pSize, pSize + 0.5, pSize + 0.5);
                             }
